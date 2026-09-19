@@ -2,11 +2,31 @@
 
 A local Slay the Spire 2 companion. Play the game yourself; Jev recommends one next action through OpenRouter. No explanations, chat, or automatic gameplay.
 
-## Run on this Mac
+## Production: use the original Steam game
+
+Production connects to the **original Steam installation** and reads its live state through a small mod. It does not copy the game, disable Steam, redirect save paths, or change Steam launch options.
+
+After the local Python/.NET environment is ready, quit the game and install the bridge once:
+
+```sh
+bash scripts/install-production.sh
+```
+
+Then enable the mod in the game's mod settings. Double-click **Start Showing Your Hand.command** and launch STS2 normally through Steam. The companion reads whichever run you play. The game controls its own modded profile/save behavior; existing saves are not copied or migrated by this tool.
+
+Only `STS2_MCP.dll` and its manifest are added to the game's `mods` folder. Existing files from another installation are never overwritten. Source code, SDK, Python environment, key, and build caches remain in this project. To remove our production mod, quit the game and run:
+
+```sh
+.venv/bin/python scripts/install-production.py --uninstall
+```
+
+Production and isolated testing both use port 15526, so run only one game instance at a time. After game updates, rebuild against the updated game. Production mode is prepared but has not yet been tested in a Steam-connected session.
+
+## Development: isolated test game
 
 For the existing local installation, the isolated environment and key are already configured. For a fresh clone, run `bash scripts/setup.sh`, then copy `.env.example` to `.env.local`, fill in your OpenRouter key and run `chmod 600 .env.local`.
 
-Double-click **Start Showing Your Hand.command** in this folder, or use:
+Double-click **Start Isolated Test.command** in this folder, or use:
 
 ```sh
 cd /path/to/showing-your-hand
@@ -57,7 +77,7 @@ The key is in `.env.local`, permission `600`, excluded from Git. Do not paste it
 
 The bridge accepts only `GET /` and `GET /api/v1/singleplayer`. All control requests return 405. State queries no longer open shops or chests; they tell the player to open them. The upstream test client remains in `scripts/probe_state.py` for historical testing, but its action requests are rejected by this build.
 
-## Isolation
+## Development isolation
 
 Source, Python environment, SDK, dependency caches, game copy and disposable saves live in this project. The game runs under a macOS sandbox that prevents writes outside this workspace and disables non-local network connections. Steam is disabled for the copied game; the normal Steam installation is untouched. A temporary uniquely named Application Support symlink points to the disposable saves while running and is removed on exit. The recommendation service can reach OpenRouter independently of the game's network restriction.
 

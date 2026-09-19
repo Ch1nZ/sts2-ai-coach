@@ -1,4 +1,4 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")"
-bash scripts/play-production.sh
+bash scripts/play.sh
