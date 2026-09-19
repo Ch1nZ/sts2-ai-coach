@@ -1,0 +1,12 @@
+.tools/
+.cache/
+.runtime/
+vendor/
+artifacts/
+.env*
+!.env.example
+.venv/
+__pycache__/
+*.pyc
+**/bin/
+**/obj/
