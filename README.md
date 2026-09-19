@@ -1,102 +1,102 @@
 # Showing Your Hand
 
-A local Slay the Spire 2 companion. Play the game yourself; Jev recommends one next action through OpenRouter. No explanations, chat, or automatic gameplay.
+A Slay the Spire 2 companion powered by **Jev through OpenRouter**. It shows one recommended action inside the game and refreshes as you play. You keep control of the game.
 
-## Production: use the original Steam game
+## Quick start
 
-Production connects to the **original Steam installation** and reads its live state through a small mod. It does not copy the game, disable Steam, redirect save paths, or change Steam launch options.
-
-After the local Python/.NET environment is ready, quit the game and install the bridge once:
+You need **Python 3.9 or newer**, a Steam installation of **Slay the Spire 2**, and your own **OpenRouter API key with credits**. Close STS2 during setup.
 
 ```sh
-bash scripts/install-production.sh
+git clone https://github.com/Ch1nZ/showing-your-hand.git
+cd showing-your-hand
+python manage.py setup
+python manage.py start
 ```
 
-Then enable the mod in the game's mod settings. Double-click **Start Showing Your Hand.command** and launch STS2 normally through Steam. The companion reads whichever run you play. The game controls its own modded profile/save behavior; existing saves are not copied or migrated by this tool.
+Use `python3` on macOS/Linux if `python` is unavailable; on Windows, `py -3` also works. This repository is currently private, so cloning requires repository access.
 
-Only `STS2_MCP.dll` and its manifest are added to the game's `mods` folder. Existing files from another installation are never overwritten. Source code, SDK, Python environment, key, and build caches remain in this project. To remove our production mod, quit the game and run:
+`setup` finds your Steam libraries, prompts for your API key without displaying it, creates a local Python environment, downloads a project-local .NET SDK, builds against your installed game, and installs the bridge mod. Nothing needs to be installed with pip, Homebrew, or an administrator-level package manager. You need write access to your game's mods folder; if your Steam library restricts that access, use a user-writable Steam library.
+
+**Launch STS2 normally through Steam and enable the bridge in its mod settings.** Accept the game's mod-loading prompt if shown and restart the game if it requests it. Keep the companion running while you play. The recommendation appears at the top of the game window.
+
+After the initial setup, just run `python manage.py start` and open the game from Steam. Either can start first. Ctrl-C stops only the companion; it does not close the game. Optional launchers: `Start Showing Your Hand.command` on macOS and `Start Showing Your Hand.cmd` on Windows.
+
+Optional companion panel: [localhost:18765](http://127.0.0.1:18765), with Pause, Resume, and Retry. Closing the browser does not pause recommendations while the in-game overlay is connected.
+
+## Steam detection
+
+Setup reads Steam's `libraryfolders.vdf` and the STS2 application manifest, including libraries on other drives. Windows detection also checks Steam's current-user registry entry. macOS, Windows and Linux layout detection is implemented. For nonstandard installations or multiple detected copies, select the game explicitly:
 
 ```sh
-.venv/bin/python scripts/install-production.py --uninstall
+python manage.py setup --game-dir "/path/to/steamapps/common/Slay the Spire 2"
 ```
 
-Production and isolated testing both use port 15526, so run only one game instance at a time. After game updates, rebuild against the updated game. Production mode is prepared but has not yet been tested in a Steam-connected session.
+`STS2_GAME_DIR` overrides game detection, and `STEAM_DIR` supplies an additional Steam root. Do not select a saves folder. On macOS you may also select `SlayTheSpire2.app`.
 
-## Development: isolated test game
+The original Steam game is used directly. Production does not copy the game, disable Steam, modify launch options, or redirect saves. The game controls its own modded profile behavior; this tool does not copy or migrate existing saves.
 
-For the existing local installation, the isolated environment and key are already configured. For a fresh clone, run `bash scripts/setup.sh`, then copy `.env.example` to `.env.local`, fill in your OpenRouter key and run `chmod 600 .env.local`.
+## Your key
 
-Double-click **Start Isolated Test.command** in this folder, or use:
+Setup stores your key in the Git-ignored `.env.local` file; on macOS/Linux its permissions are limited to your user. It is never included in browser responses or sent to the game mod.
+
+For a noninteractive installation, copy `.env.example` to `.env.local` and fill in `OPENROUTER_API_KEY` first. Alternatively, provide that environment variable to the process. `OPENROUTER_MODEL` defaults to `typesafe/jev-1.13`. To replace a saved key, edit `.env.local`; to add a missing key interactively, run `python manage.py configure`.
+
+Each player supplies their own key. No key is bundled with the repository. Only game context and action candidates are sent to OpenRouter.
+
+## Updates, checks and removal
 
 ```sh
-cd /path/to/showing-your-hand
+python manage.py doctor
+# After pulling an update or updating STS2, quit the game and rebuild:
+python manage.py setup
+# Remove only this project's bridge files:
+python manage.py uninstall
+```
+
+Startup checks the bridge hashes and the game assembly used for the build. A game update requires a rebuild; incompatible game API changes may require a repository update too. Setup refuses to overwrite another installation's STS2_MCP files and rolls back its writes if installation fails. Keep the repository's `.cache/production-install.json` receipt for updates and removal.
+
+Only the bridge DLL and manifest are installed in the game's `mods` directory. The source, SDK, Python environment, key and build caches remain inside the repository folder. No autostart service is registered. Run only one STS2 instance: the bridge uses port 15526 and the companion uses 18765.
+
+## Recommendation behavior
+
+- Reads live state four times per second and waits for 0.5 seconds of unchanged state before deciding.
+- Uses OpenRouter's dedicated Decisions API, not chat completions.
+- Sends one request per unchanged decision, at least two seconds apart, with a limit of 120 requests per companion session. Failed requests require explicit Retry. A sole available action needs no model request.
+- Clears recommendations on observed state changes, disconnect, or pause. Results for an old state are discarded.
+- Builds candidates for combat, card rewards, maps, shops, events, campfires, treasure and common selection prompts. Unknown screens and targeting types require manual input.
+- Includes the permanent deck, hand and unordered draw-pile contents. Hidden draw order and future random outcomes are not supplied.
+
+The bridge accepts only health and single-player state reads. It rejects control requests, does not play cards, and does not automatically open shops or chests. Jev selects from the available candidates; this is a direct model policy, not a combat simulator or a claim of optimal play.
+
+## Development and validation
+
+```sh
+python -m unittest discover -s tests -v
+# Compile against an installed game without installing or requesting a key:
+python manage.py setup --build-only
+```
+
+The SDK is downloaded using Microsoft's official installer into `.tools/dotnet`. Build caches stay in `.cache`. There are no Python package dependencies.
+
+**Verified:** 18 local regression tests, Steam discovery on this Mac, and compilation against the actual installed STS2 v0.107.1 with zero warnings/errors. Real Jev calls and the in-game overlay were previously verified in an isolated copy of that build. Windows/Linux discovery and installation logic have fixture tests and a CI matrix; native Steam-connected gameplay on those platforms has not been tested. Full production gameplay on the original Steam installation remains to be validated. Multiplayer and every character/mechanic are not yet covered.
+
+The optional macOS-only isolated development environment is separate from the normal setup:
+
+```sh
+bash scripts/setup-isolated.sh
 bash scripts/play.sh
 ```
 
-This starts the recommendation service and the separate game copy. The recommendation appears at the top of the game. Continue the disposable run or start a new one normally. Your Steam save is not used. The first graphical launch may take time to compile shaders.
+It uses a copied game, disposable saves, disabled Steam and restricted network access. Its temporary Application Support symlink is removed on launcher exit. Production setup never creates this copy. Saved local test snapshots in `artifacts/` are not shipped; `scripts/live-check.py` requires such a snapshot and makes one billed request.
 
-Optional companion panel: http://127.0.0.1:18765 — includes Pause, Resume and Retry. Closing the browser does not pause if the game overlay is still connected. Quit the game to stop a session launched with `play.sh`; Ctrl-C also stops it.
+## Code and attribution
 
-When running development processes separately:
+- `manage.py`, `spire/setup.py`, `spire/steam.py`: portable setup, Steam discovery and lifecycle.
+- `spire/decisions.py`: candidate generation and the Jev request contract.
+- `spire/clients.py`, `spire/engine.py`: OpenRouter connection, polling, request limits and stale-result rejection.
+- `spire/server.py`, `spire/web/`: local service and companion panel.
+- `mod/STS2Bridge/`: state reader and in-game overlay.
 
-```sh
-bash scripts/start.sh
-# In another terminal:
-bash scripts/launch-isolated.sh
-```
+The bridge derives from [STS2MCP](https://github.com/Gennadiyev/STS2MCP), revision `55e064850a68f3b4cde7e5fd525bf9b2dec4e885`, under its included MIT license. See `mod/STS2Bridge/UPSTREAM.md`. Game binaries and saves are never distributed.
 
-Use `--headless` with `launch-isolated.sh` for state-reader tests. It does not start a run automatically.
-
-## Setup and secrets
-
-`bash scripts/setup.sh` prepares local Python/.NET environments and the separate game copy on this Mac. It uses no global package installation or shell profile edits. The script targets this Mac's Steam path and v0.107.1; this is not yet a cross-platform installer.
-
-The key is in `.env.local`, permission `600`, excluded from Git. Do not paste it into source files. `.env.example` lists supported settings. The default model is `typesafe/jev-1.13`. Only the backend reads the key; neither the browser nor the mod receives it. Game snapshots and candidate actions are sent to OpenRouter when a decision is needed.
-
-## Behavior
-
-- Reads game state four times per second; waits for 0.5 seconds of unchanged state before deciding.
-- Uses OpenRouter's `POST https://openrouter.ai/api/alpha/decisions` with typed choice questions, not chat completions.
-- Sends one request per unchanged decision state, with at least two seconds between requests and at most 120 requests per service session. Retry is explicit after a failed call. A sole available action needs no model request.
-- Clears recommendations when a state change is observed, on disconnect, and when paused. Responses from a previous state are discarded.
-- Builds candidates for combat, card rewards, maps, shops, events, campfires, treasure, and ordinary selection prompts. Unknown screens/targeting types wait for manual input. Combat recommendations include potions and ending the turn.
-- Supplies the permanent deck, current hand and unordered draw-pile contents. Never treats the draw-pile list as the hidden draw order.
-- The local model choice is constrained to supplied candidates. This is a direct Jev policy, not a combat simulator or a demonstrated optimal strategy.
-
-## Components
-
-| Location | Purpose |
-|---|---|
-| `spire/decisions.py` | Candidate generation and decision contract |
-| `spire/clients.py` | Local state reader, local secret loading, OpenRouter client |
-| `spire/engine.py` | Polling, stable-state checks, stale-result rejection and request limits |
-| `spire/server.py`, `spire/web/` | Local service and compact companion panel |
-| `mod/STS2Bridge/` | Modified STS2MCP reader and in-game recommendation display |
-| `scripts/` | Local setup, build, run and integration checks |
-| `tests/` | Offline decision and concurrency regression checks |
-
-The bridge accepts only `GET /` and `GET /api/v1/singleplayer`. All control requests return 405. State queries no longer open shops or chests; they tell the player to open them. The upstream test client remains in `scripts/probe_state.py` for historical testing, but its action requests are rejected by this build.
-
-## Development isolation
-
-Source, Python environment, SDK, dependency caches, game copy and disposable saves live in this project. The game runs under a macOS sandbox that prevents writes outside this workspace and disables non-local network connections. Steam is disabled for the copied game; the normal Steam installation is untouched. A temporary uniquely named Application Support symlink points to the disposable saves while running and is removed on exit. The recommendation service can reach OpenRouter independently of the game's network restriction.
-
-The app is a local development prototype, not a full virtual machine. Standard operating-system process bookkeeping still occurs. If forcibly killing the launcher prevents cleanup, remove only the `ShowingYourHand-STS2-Dev` symlink after verifying the copied game has stopped.
-
-## Validation
-
-```sh
-.venv/bin/python -m unittest discover -s tests -v
-bash scripts/build-bridge.sh
-.venv/bin/python scripts/live-check.py artifacts/state-combat-before.json
-```
-
-The last command makes one billed OpenRouter request. Never rebuild/copy the mod while the isolated game is running; quit first.
-
-Validated on STS2 v0.107.1: bridge builds with no warnings/errors; live combat state includes the 10-card deck; OpenRouter returned a valid action using `typesafe/jev-1.13-20260917`; both the connected companion panel and the in-game overlay visibly displayed `Play Bash → Nibbit (enemy 1)`. Offline tests cover stale responses, paused requests, deduplication, budgets, targeting and unavailable actions. Broader mechanics, other characters, multiplayer, future patches, and normal Steam-connected play are not yet validated.
-
-## Upstream
-
-The bridge is based on [STS2MCP](https://github.com/Gennadiyev/STS2MCP), revision `55e064850a68f3b4cde7e5fd525bf9b2dec4e885`, under the included MIT license. See `mod/STS2Bridge/UPSTREAM.md`. The original investigation is in `TEST-RESULTS.md`.
-
-OpenRouter's [Decisions API reference](https://openrouter.ai/docs/api/api-reference/alphadecisions/submit-a-decisions-questions-and-answers-request) defines the request/response contract. This endpoint is in alpha.
+[OpenRouter Decisions API reference](https://openrouter.ai/docs/api/api-reference/alphadecisions/submit-a-decisions-questions-and-answers-request) · [Microsoft SDK installer documentation](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script)
