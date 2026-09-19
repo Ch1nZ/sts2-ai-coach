@@ -193,7 +193,7 @@ public static partial class McpMod
 
             if (path == "/")
             {
-                SendJson(response, new { message = $"Hello from STS2 MCP v{Version}", status = "ok", read_only = true, bridge = "showing-your-hand" });
+                SendJson(response, new { message = $"Hello from STS2 MCP v{Version}", status = "ok", read_only = true, bridge = "sts2-ai-coach" });
             }
             else if (path == "/api/v1/singleplayer")
             {

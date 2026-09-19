@@ -1,1 +1,1 @@
-"""Showing Your Hand: a local Slay the Spire 2 recommender."""
+"""STS2 AI Coach: a local Slay the Spire 2 recommender."""

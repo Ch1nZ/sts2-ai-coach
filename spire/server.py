@@ -55,7 +55,7 @@ def main():
 
     server = ThreadingHTTPServer(('127.0.0.1', args.port), Handler)
     engine.thread.start()
-    print(f'Showing Your Hand — http://127.0.0.1:{args.port}', flush=True)
+    print(f'STS2 AI Coach — http://127.0.0.1:{args.port}', flush=True)
     def terminate(*_):
         raise KeyboardInterrupt
     signal.signal(signal.SIGTERM, terminate)

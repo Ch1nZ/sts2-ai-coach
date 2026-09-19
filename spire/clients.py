@@ -38,7 +38,7 @@ def evaluate(body):
         raise ValueError('This game state is too large to evaluate.')
     request = urllib.request.Request(ENDPOINT, data=payload, headers={
         'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json',
-        'X-Title': 'Showing Your Hand'})
+        'X-Title': 'STS2 AI Coach'})
     try:
         with urllib.request.urlopen(request, timeout=20) as response:
             result = json.load(response)

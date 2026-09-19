@@ -14,7 +14,7 @@ import socket
 for port in (18765, 15526):
     with socket.socket() as s:
         if s.connect_ex(('127.0.0.1', port)) == 0:
-            raise SystemExit('Showing Your Hand or its game bridge is already running. Use the existing session.')
+            raise SystemExit('STS2 AI Coach or its game bridge is already running. Use the existing session.')
 PY
 .venv/bin/python -m spire.server > artifacts/app.log 2>&1 &
 APP_PID=$!

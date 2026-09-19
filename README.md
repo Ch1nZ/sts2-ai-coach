@@ -1,25 +1,25 @@
-# Showing Your Hand
+# STS2 AI Coach — Slay the Spire 2
 
-A Slay the Spire 2 companion powered by **Jev through OpenRouter**. It shows one recommended action inside the game and refreshes as you play. You keep control of the game.
+An AI coach for Slay the Spire 2 on Steam, powered by **Jev through OpenRouter**. It shows one recommended action inside the game and refreshes as you play. You keep control of the game.
 
 ## Quick start
 
 You need **Python 3.9 or newer**, a Steam installation of **Slay the Spire 2**, and your own **OpenRouter API key with credits**. Close STS2 during setup.
 
 ```sh
-git clone https://github.com/Ch1nZ/showing-your-hand.git
-cd showing-your-hand
+git clone https://github.com/Ch1nZ/sts2-ai-coach.git
+cd sts2-ai-coach
 python manage.py setup
 python manage.py start
 ```
 
-Use `python3` on macOS/Linux if `python` is unavailable; on Windows, `py -3` also works. This repository is currently private, so cloning requires repository access.
+Use `python3` on macOS/Linux if `python` is unavailable; on Windows, `py -3` also works.
 
 `setup` finds your Steam libraries, prompts for your API key without displaying it, creates a local Python environment, downloads a project-local .NET SDK, builds against your installed game, and installs the bridge mod. Nothing needs to be installed with pip, Homebrew, or an administrator-level package manager. You need write access to your game's mods folder; if your Steam library restricts that access, use a user-writable Steam library.
 
 **Launch STS2 normally through Steam and enable the bridge in its mod settings.** Accept the game's mod-loading prompt if shown and restart the game if it requests it. Keep the companion running while you play. The recommendation appears at the top of the game window.
 
-After the initial setup, just run `python manage.py start` and open the game from Steam. Either can start first. Ctrl-C stops only the companion; it does not close the game. Optional launchers: `Start Showing Your Hand.command` on macOS and `Start Showing Your Hand.cmd` on Windows.
+After the initial setup, just run `python manage.py start` and open the game from Steam. Either can start first. Ctrl-C stops only the companion; it does not close the game. Optional launchers: `Start STS2 AI Coach.command` on macOS and `Start STS2 AI Coach.cmd` on Windows.
 
 Optional companion panel: [localhost:18765](http://127.0.0.1:18765), with Pause, Resume, and Retry. Closing the browser does not pause recommendations while the in-game overlay is connected.
 

@@ -9,7 +9,7 @@ namespace STS2_MCP;
 public static partial class McpMod
 {
     private static Label? _recommendationLabel;
-    private static volatile string _recommendation = "Start Showing Your Hand";
+    private static volatile string _recommendation = "Start STS2 AI Coach";
     private static bool _overlayStarted;
     private static bool _overlayErrorReported;
 
@@ -86,10 +86,10 @@ public static partial class McpMod
             {
                 if (!_overlayErrorReported)
                 {
-                    GD.PrintErr("[Showing Your Hand] Local overlay connection: " + error);
+                    GD.PrintErr("[STS2 AI Coach] Local overlay connection: " + error);
                     _overlayErrorReported = true;
                 }
-                _recommendation = "Start Showing Your Hand";
+                _recommendation = "Start STS2 AI Coach";
             }
             await Task.Delay(500);
         }

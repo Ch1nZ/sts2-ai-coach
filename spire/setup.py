@@ -158,7 +158,7 @@ def installed_game():
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Set up and run Showing Your Hand with your Steam game.')
+    parser = argparse.ArgumentParser(description='Set up and run STS2 AI Coach with your Steam game.')
     parser.add_argument('command', choices=['setup', 'start', 'doctor', 'configure', 'uninstall'])
     parser.add_argument('--game-dir', help='Override automatic Steam-library discovery')
     parser.add_argument('--build-only', action='store_true', help='Setup only: compile without installing or prompting for a key')
